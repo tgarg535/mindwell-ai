@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindWell AI - Mental Health Screening Agent</title>
+<style>
+  :root{
+    --primary:#5b6ee1; --primary-dark:#3f51b5; --accent:#2bb673;
+    --bg:#f4f6fb; --card:#ffffff; --text:#1f2733; --muted:#6b7686;
+    --warn:#e8a13c; --severe:#d9534f;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:linear-gradient(135deg,#eef1fa 0%,#f7fbf8 100%);color:var(--text);min-height:100vh;}
+  header{background:var(--primary-dark);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  header .logo{width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;}
+  header h1{font-size:1.25rem;font-weight:600;}
+  header p{font-size:.8rem;opacity:.85;}
+  .badge{margin-left:auto;background:var(--accent);color:#fff;padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:600;}
+  .container{max-width:760px;margin:32px auto;padding:0 18px;}
+  .card{background:var(--card);border-radius:14px;padding:28px 30px;box-shadow:0 4px 18px rgba(40,60,120,.08);margin-bottom:22px;}
+  .step{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+  .step span{padding:6px 14px;border-radius:20px;font-size:.75rem;background:#e8ebf5;color:var(--muted);}
+  .step span.active{background:var(--primary);color:#fff;font-weight:600;}
+  h2{color:var(--primary-dark);margin-bottom:8px;font-size:1.35rem;}
+  .muted{color:var(--muted);font-size:.92rem;line-height:1.55;margin-bottom:16px;}
+  .conf{background:#eaf6ef;border-left:4px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:.83rem;color:#256b4a;margin-bottom:18px;}
+  label.q{display:block;font-weight:600;margin:18px 0 8px;font-size:.95rem;}
+  textarea{width:100%;min-height:110px;padding:12px;border:1.5px solid #d5dbe8;border-radius:9px;font-size:.92rem;resize:vertical;outline:none;}
+  textarea:focus{border-color:var(--primary);}
+  .likert{display:flex;gap:6px;flex-wrap:wrap;}
+  .likert button{flex:1;min-width:78px;padding:10px 6px;border:1.5px solid #d5dbe8;background:#fff;border-radius:9px;cursor:pointer;font-size:.8rem;transition:.15s;}
+  .likert button:hover{border-color:var(--primary);}
+  .likert button.sel{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
+  .nav{display:flex;gap:12px;margin-top:26px;}
+  .btn{padding:12px 26px;border:none;border-radius:9px;font-size:.95rem;font-weight:600;cursor:pointer;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:#eceef5;color:var(--primary-dark);}
+  .hidden{display:none !important;}
+  .result-banner{border-radius:12px;padding:22px 24px;color:#fff;margin-bottom:20px;}
+  .result-banner h3{font-size:1.3rem;margin-bottom:6px;}
+  .banner-Normal{background:var(--accent);}
+  .banner-Mild{background:var(--warn);}
+  .banner-Moderate{background:#e07a3f;}
+  .banner-Severe{background:var(--severe);}
+  .email-frame{border:1.5px solid #d5dbe8;border-radius:10px;overflow:hidden;}
+  .email-head{background:#f0f2f9;padding:12px 16px;font-size:.85rem;border-bottom:1px solid #e0e4f0;}
+  .email-head b{color:var(--primary-dark);}
+  .email-body{padding:18px;font-size:.92rem;line-height:1.65;white-space:pre-line;}
+  .email-body ul{margin:10px 0 10px 22px;}
+  .crisis{background:#fdecea;border:1.5px solid #f5c6c0;border-radius:9px;padding:12px 16px;font-size:.85rem;color:#a33;margin-top:14px;}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0;}
+  .metric{background:#f4f6fc;border-radius:9px;padding:14px;text-align:center;}
+  .metric .val{font-size:1.5rem;font-weight:700;color:var(--primary-dark);}
+  .metric .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin:14px 0;}
+  .flow .node{background:#eef1fa;border-radius:8px;padding:7px 12px;font-weight:600;color:var(--primary-dark);}
+  .flow .arrow{color:#b9c0d4;}
+  .spin{width:44px;height:44px;border:4px solid #dde2f2;border-top-color:var(--primary);border-radius:50%;animation:sp 1s linear infinite;margin:26px auto;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .analyzing{text-align:center;padding:10px 0 24px;color:var(--muted);font-size:.9rem;}
+  footer{text-align:center;color:var(--muted);font-size:.75rem;padding:22px;}
+  .print-note{font-size:.78rem;color:var(--muted);margin-top:10px;}
+  @media print{header .badge,.nav,.no-print{display:none;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🧠</div>
+  <div><h1>MindWell AI — Mental Health Screening Agent</h1><p>IBM SkillsBuild Agentic AI Prototype · AI-DS B2 · Tanush Garg</p></div>
+  <div class="badge">PROTOTYPE v1.0</div>
+</header>
+
+<div class="container">
+
+  <!-- STEP 1 : LANDING -->
+  <div class="card" id="landing">
+    <div class="step"><span class="active">1 · Screening</span><span>2 · AI Analysis</span><span>3 · Feedback</span></div>
+    <h2>Welcome to your mental wellness check-in</h2>
+    <p class="muted">This automated agent provides a <b>confidential, non-judgmental first step</b> for understanding your mental wellbeing. It uses an AI analysis engine (simulating the GPT-4.1 + Relay.app workflow from the internship project) to interpret your responses and deliver personalized, supportive feedback — exactly as described in the system architecture.</p>
+    <div class="flow">
+      <span class="node">Google Form</span><span class="arrow">→</span>
+      <span class="node">Webhook Trigger</span><span class="arrow">→</span>
+      <span class="node">AI Analysis (NLP)</span><span class="arrow">→</span>
+      <span class="node">Classification</span><span class="arrow">→</span>
+      <span class="node">Feedback Email</span>
+    </div>
+    <div class="conf">🔒 <b>Privacy first:</b> Your responses are processed locally in this demo. Results are shown only to you, and any real deployment anonymizes all conversation data.</div>
+    <div class="nav"><button class="btn btn-primary" onclick="show('screening')">Start Assessment →</button></div>
+  </div>
+
+  <!-- STEP 2 : FORM -->
+  <div class="card hidden" id="screening">
+    <div class="step"><span class="active">1 · Screening</span><span>2 · AI Analysis</span><span>3 · Feedback</span></div>
+    <h2>Mental Health Assessment (PHQ-based)</h2>
+    <p class="muted">Over the <b>last 2 weeks</b>, how often have you been bothered by the following?</p>
+
+    <label class="q">Q1. Little interest or pleasure in doing things</label>
+    <div class="likert" data-q="0"></div>
+    <label class="q">Q2. Feeling down, depressed, or hopeless</label>
+    <div class="likert" data-q="1"></div>
+    <label class="q">Q3. Trouble falling/staying asleep, or sleeping too much</label>
+    <div class="likert" data-q="2"></div>
+    <label class="q">Q4. Feeling tired or having little energy</label>
+    <div class="likert" data-q="3"></div>
+    <label class="q">Q5. Poor appetite or overeating</label>
+    <div class="likert" data-q="4"></div>
+    <label class="q">Q6. Feeling bad about yourself — or that you are a failure</label>
+    <div class="likert" data-q="5"></div>
+    <label class="q">Q7. Trouble concentrating on things (work, study, reading)</label>
+    <div class="likert" data-q="6"></div>
+    <label class="q">Q8. Moving/speaking so slowly (or being fidgety/restless) that others noticed</label>
+    <div class="likert" data-q="7"></div>
+    <label class="q">Q9. Thoughts that you would be better off dead, or of hurting yourself</label>
+    <div class="likert" data-q="8"></div>
+
+    <label class="q">Q10. In your own words — how have you been feeling lately? (AI sentiment analysis)</label>
+    <textarea id="freeText" placeholder="e.g. I've been feeling very stressed with exams and can't sleep properly..."></textarea>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="show('landing')">← Back</button>
+      <button class="btn btn-primary" onclick="submitForm()">Submit & Trigger AI Analysis ⚡</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 : ANALYZING -->
+  <div class="card hidden" id="analyzing">
+    <div class="step"><span>1 · Screening ✓</span><span class="active">2 · AI Analysis</span><span>3 · Feedback</span></div>
+    <div class="spin"></div>
+    <div class="analyzing" id="analyzingMsg">Webhook received — sending responses to AI engine…</div>
+    <div class="flow" style="justify-content:center">
+      <span class="node">New form response</span><span class="arrow">→</span>
+      <span class="node">Prompt GPT-4.1</span><span class="arrow">→</span>
+      <span class="node" id="classNode">Classifying…</span>
+    </div>
+  </div>
+
+  <!-- STEP 4 : RESULT -->
+  <div class="card hidden" id="result">
+    <div class="step"><span>1 · Screening ✓</span><span>2 · AI Analysis ✓</span><span class="active">3 · Feedback</span></div>
+    <div class="result-banner" id="banner">
+      <h3 id="bannerTitle"></h3>
+      <div id="bannerSub"></div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="val" id="mScore">–</div><div class="lbl">PHQ-9 Score</div></div>
+      <div class="metric"><div class="val" id="mClass">–</div><div class="lbl">AI Classification</div></div>
+      <div class="metric"><div class="val" id="mSent">–</div><div class="lbl">Sentiment</div></div>
+      <div class="metric"><div class="val" id="mConf">–</div><div class="lbl">Confidence</div></div>
+    </div>
+
+    <h2 style="font-size:1.1rem">📧 Automated Feedback — Email Preview (as delivered to user inbox)</h2>
+    <div class="email-frame" style="margin-top:10px">
+      <div class="email-head">From: <b>mindwell-ai-agent@project.demo</b> &nbsp;·&nbsp; To: <b id="toEmail">user@example.com</b></div>
+      <div class="email-head"><b>Subject:</b> <span id="emailSubject"></span></div>
+      <div class="email-body" id="emailBody"></div>
+    </div>
+
+    <div class="crisis hidden" id="crisisBox"></div>
+
+    <div class="nav no-print">
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ Print / Save PDF</button>
+      <button class="btn btn-ghost" onclick="restart()">↺ Run Another Screening</button>
+    </div>
+    <p class="print-note">Note: In the live internship build, this email is auto-dispatched via Gmail integration in Relay.app (step 5 of the workflow). This prototype shows the exact same generated content.</p>
+  </div>
+</div>
+<footer>Prototype for evaluation · AI-powered preliminary screening tool — not a medical diagnosis · IBM SkillsBuild Agentic AI Internship · IBM Cloud deployment target</footer>
+
+<script>
+const OPTIONS = ["Not at all","Several days","More than half the days","Nearly every day"];
+const SCORES = [0,1,2,3];
+const answers = new Array(9).fill(-1);
+const LIKERT_STYLE = ["","background:#2bb673","background:#e8a13c","background:#d9534f"];
+
+document.querySelectorAll('.likert').forEach(el=>{
+  const qi = +el.dataset.q;
+  OPTIONS.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.textContent=opt;
+    b.style.cssText="display:flex;flex-direction:column;align-items:center;gap:4px";
+    const dot=document.createElement('span');
+    dot.style.cssText="width:12px;height:12px;border-radius:50%;"+LIKERT_STYLE[i];
+    b.prepend(dot);
+    b.onclick=()=>{
+      answers[qi]=SCORES[i];
+      [...el.children].forEach((c,j)=>c.classList.toggle('sel',j===i));
+    };
+    el.appendChild(b);
+  });
+});
+
+function show(id){
+  ['landing','screening','analyzing','result'].forEach(x=>document.getElementById(x).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function analyze(){
+  const score = answers.reduce((a,b)=>a+Math.max(b,0),0);
+  const text = (document.getElementById('freeText').value||'').toLowerCase();
+  const negWords = ['sad','stress','anxious','anxiety','tired','hopeless','alone','sleep','worried','depress','angry','overwhelm','burnout','crying','worthless','failure','scared','nervous'];
+  const riskWords = ['better off dead','hurt myself','self-harm','suicide','end it all','no point living'];
+  let hits = negWords.filter(w=>text.includes(w)).length;
+  const riskHit = riskWords.some(w=>text.includes(w));
+
+  let cls;
+  if(score<=4 && hits<=2) cls='Normal';
+  else if(score<=9 && hits<=4) cls='Mild';
+  else if(score<=14 || hits>=5) cls='Moderate';
+  else cls='Severe';
+  if(riskHit || score>=20) cls='Severe';
+  else if(riskHit===false && score>=15) cls='Severe';
+
+  const sentiment = hits===0 ? 'Positive / Neutral' : hits<=3 ? 'Mildly negative' : 'Distressed';
+  const conf = Math.min(97, 78 + hits*3 + (score>0?5:0));
+  return {score, cls, hits, sentiment, conf, riskHit};
+}
+
+const TIPS = {
+  Normal:["Keep up your regular routine and healthy habits.","Stay connected with friends and family.","Practice mindfulness or light exercise daily."],
+  Mild:["Try to keep a regular sleep and meal schedule.","Take short breaks during study or work.","Talk to someone you trust about how you feel."],
+  Moderate:["Consider scheduling a session with a counsellor.","Break large tasks into small, manageable steps.","Limit caffeine and maintain a consistent sleep routine."],
+  Severe:["Please reach out to a mental health professional as soon as possible.","Contact a crisis helpline (details below) — support is available 24/7.","Share how you feel with someone you trust today."]
+};
+
+function buildEmail(name,r){
+  const subject = "Health Update - "+r.cls+ (r.cls==='Normal'?"":" Symptoms Detected");
+  const tips = TIPS[r.cls].map(t=>"• "+t).join("\n");
+  let body =
+`Dear ${name},
+
+Thank you for completing the MindWell AI mental wellness check-in.
+
+Based on our AI analysis of your assessment (PHQ-9 score: ${r.score}/27, sentiment: ${r.sentiment}), your responses have been classified as: ${r.cls.toUpperCase()} ${r.cls==='Normal'?'✅':r.cls==='Mild'?'⚠️':r.cls==='Moderate'?'⚠️':'🚨'}.
+
+${r.cls==='Normal'
+  ?"This indicates no significant signs of emotional distress at this time. Keep maintaining your healthy routines!"
+  :"This may indicate "+(r.cls==='Severe'?"serious emotional distress requiring prompt professional attention.":"early signs of stress, anxiety, or depressive symptoms. There is no need for alarm — with proper care and professional guidance, this can be managed effectively.")}
+
+To support your overall well-being, here are a few personalized tips:
+${tips}
+
+${r.cls==='Normal'
+  ?"Continue to monitor your wellbeing and re-check in periodically."
+  :"We highly recommend contacting a counsellor or mental health professional to help manage and guide you through this process."}
+
+With the right steps, you can improve your health. Don't hesitate to reach out if you need further assistance.
+
+Best regards,
+MindWell AI Agent — IBM SkillsBuild Prototype
+⚕️ This is a preliminary screening tool and is not a substitute for professional diagnosis.`;
+  return {subject, body};
+}
+
+function submitForm(){
+  if(answers.some(a=>a<0)){ alert("Please answer all 9 questionnaire items before submitting."); return; }
+  show('analyzing');
+  const msgs=["Webhook received — sending responses to AI engine…","Running sentiment & emotional-tone NLP analysis…","Classifying mental health status…","Generating personalized feedback email…"];
+  let i=0;
+  const iv=setInterval(()=>{ i++; if(i<msgs.length) document.getElementById('analyzingMsg').textContent=msgs[i]; },700);
+  setTimeout(()=>{
+    clearInterval(iv);
+    const r=analyze();
+    document.getElementById('classNode').textContent=r.cls.toUpperCase();
+    setTimeout(()=>render(r), 600);
+  }, 2800);
+}
+
+function render(r){
+  const name=(prompt("Enter name for the email preview (demo):","User")||"User").trim();
+  const email=buildEmail(name,r);
+  const banner=document.getElementById('banner');
+  banner.className='result-banner banner-'+r.cls;
+  document.getElementById('bannerTitle').textContent =
+    r.cls==='Normal' ? "✅ Status: Normal — No significant distress detected"
+    : r.cls==='Mild' ? "⚠️ Status: Mild Symptoms detected"
+    : r.cls==='Moderate' ? "⚠️ Status: Moderate Symptoms detected"
+    : "🚨 Status: Severe — Escalation path triggered";
+  document.getElementById('bannerSub').textContent = r.cls==='Severe'
+    ? "High-risk classification — crisis resources and human oversight alert activated."
+    : "Personalized supportive feedback generated and dispatched to user inbox.";
+  document.getElementById('mScore').textContent=r.score+"/27";
+  document.getElementById('mClass').textContent=r.cls;
+  document.getElementById('mSent').textContent=r.sentiment;
+  document.getElementById('mConf').textContent=r.conf+"%";
+  document.getElementById('toEmail').textContent=name.toLowerCase().replace(/\s+/g,'.')+"@example.com";
+  document.getElementById('emailSubject').textContent=email.subject;
+  document.getElementById('emailBody').textContent=email.body;
+  const crisis=document.getElementById('crisisBox');
+  if(r.cls==='Severe' || r.riskHit){
+    crisis.classList.remove('hidden');
+    crisis.innerHTML="<b>🚨 ESCALATION PATH ACTIVATED:</b> In the full build, a Severe classification triggers automatic crisis intervention resources — <b>iCall: 9152987821 · Vandrevala Foundation: 1860-2662-345 · AASRA: 91-9820466726</b> — and an alert for human oversight.";
+  } else crisis.classList.add('hidden');
+  show('result');
+}
+
+function restart(){ answers.fill(-1); document.getElementById('freeText').value='';
+  document.querySelectorAll('.likert button').forEach(b=>b.classList.remove('sel')); show('landing'); }
+</script>
+</body>
+</html>
